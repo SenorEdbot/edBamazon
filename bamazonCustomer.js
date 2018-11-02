@@ -21,6 +21,7 @@ const purchaseProduct = () => {
         let productsTable = new Table({
             head: ["ITEM_ID", "PRODUCT_NAME", "DEPARTMENT_NAME", "PRICE", "STOCK_QUANTITY"]
         })
+        let numChoicesArr = [];
         for (let i=0; i< results.length; i++) {
             productsTable.push([
                 results[i].item_id.toString()
@@ -29,58 +30,44 @@ const purchaseProduct = () => {
                 , "$"+results[i].price.toString()
                 , results[i].stock_quantity.toString()
             ])
+            numChoicesArr.push(results[i].item_id.toString());
         }
         console.log(`
 ----------------------------------------------------------
 ${productsTable.toString()}
 ----------------------------------------------------------
 `)
-        purchaseItem();
-    })
-}
-
-const purchaseItem = () => {
-    connection.query("SELECT item_id FROM products", (err, res)=>{
-        let choicesArr = [];
-        if(err) throw err;
-        for (let i=0; i<res.length; i++){
-            choicesArr.push(res[i].item_id);
-        }
-        
-        
-    })
         inquirer.prompt([
             {
-            name: "itemID",
-            type: "list",
-            choices: function(){
-
-            },
-            message: "What is the Item ID of the product you'd like to purchase?"
-        },{
-            name: "quantity",
-            type: "input",
-            message: "How many did you want to purchase?"
-        }
-    ])
-    .then(answer => {
-        let purchaseID = answer.itemID;
-        let purchaseQuantity = answer.quantity;
-        connection.query("SELECT * FROM products WHERE ?", {item_id: purchaseID}, (err,res) =>{
-            if (err) throw err;
-            if (purchaseQuantity > res[0].stock_quantity) {
-                console.log("Insufficient quantity!");
-                console.log("App Closing...");
-                connection.end();
-            } else {
-                console.log("order will be successful");
-                connection.query("UPDATE products SET ? WHERE ?", [{stock_quantity:res[0].stock_quantity-purchaseQuantity},{item_id:purchaseID}],(error,result) =>{
-                    if (err) throw err;
-                    console.log("Update successful");
-                    console.log(res[0].price * purchaseQuantity);
-                })
+                name: "itemID",
+                type: "list",
+                choices: numChoicesArr,
+                //  ["1", "2", "3"],
+                message: "What is the Item ID of the product you'd like to purchase?"
+            }, {
+                name: "quantity",
+                type: "input",
+                message: "How many did you want to purchase?"
             }
+        ]).then(answer => {
+            let purchaseID = answer.itemID;
+            let purchaseQuantity = answer.quantity;
+            connection.query("SELECT * FROM products WHERE ?", { item_id: purchaseID }, (err, res) => {
+                if (err) throw err;
+                if (purchaseQuantity > res[0].stock_quantity) {
+                    console.log("Insufficient quantity!");
+                    console.log("App Closing...");
+                    connection.end();
+                } else {
+                    connection.query("UPDATE products SET ? WHERE ?", [{ stock_quantity: res[0].stock_quantity - purchaseQuantity }, { item_id: purchaseID }], (error, result) => {
+                        if (err) throw err;
+                        console.log("Purchase Successful.");
+                        console.log("The total will be: $" + res[0].price * purchaseQuantity);
+                        connection.end();
+                    })
+                }
+            })
+        
         })
-
     })
 }
