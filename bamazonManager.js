@@ -32,7 +32,7 @@ const start = () => {
                 break;
             case "View Low Inventory":
                 displayLowInventory();
-                start();
+                // start();
                 break;
             case "Add to Inventory":
                 addInventory();

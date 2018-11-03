@@ -59,7 +59,7 @@ ${productsTable.toString()}
                     console.log("App Closing...");
                     connection.end();
                 } else {
-                    connection.query("UPDATE products SET ? WHERE ?", [{ stock_quantity: res[0].stock_quantity - purchaseQuantity }, { item_id: purchaseID }], (error, result) => {
+                    connection.query("UPDATE products SET ?, ? WHERE ?", [{ stock_quantity: res[0].stock_quantity - purchaseQuantity }, {product_sales: res[0].product_sales + res[0].price * purchaseQuantity}, { item_id: purchaseID }], (error, result) => {
                         if (err) throw err;
                         console.log("Purchase Successful.");
                         console.log("The total will be: $" + res[0].price * purchaseQuantity);
