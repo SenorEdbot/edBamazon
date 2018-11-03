@@ -28,18 +28,18 @@ const start = () => {
         switch (answer.userAction) {
             case "View Products for Sale":
                 displayProduct();
-                start();
+                // start();       
                 break;
             case "View Low Inventory":
                 displayLowInventory();
                 start();
                 break;
             case "Add to Inventory":
-                displayProduct();
                 addInventory();
+                // start();
                 break;
             case "Add New Product":
-                console.log("add new product");
+                addNewProduct();
                 break;
             case "Exit":
                 console.log("Thanks, CYA LATER");
@@ -76,6 +76,8 @@ ${productsTable.toString()}
 ----------------------------------------------------------
 `)
     })
+    console.log(("-").repeat(30));
+    start();
 }
 
 const displayLowInventory = () => {
@@ -99,6 +101,8 @@ ${productsTable.toString()}
 ----------------------------------------------------------
 `)
     })
+    console.log(("-").repeat(30));
+    start();
 }
 
 const addInventory = () => {
@@ -125,7 +129,7 @@ ${productsTable.toString()}
 `)
         inquirer.prompt([
             {
-                name: "inventorySelected",
+                name: "inventory",
                 type: "list",
                 choices: numChoicesArr,
                 message: "Increase Inventory to which item?"
@@ -135,20 +139,59 @@ ${productsTable.toString()}
                 message: "Increase the Inventory by how much?"
             }
         ]).then(answers => {
-            console.log(answers.inventorySelected, answers.amount);
-            connection.query("UPDATE products SET stock_quantity = stock_quantity + ? WHERE item_id = ?",[{answers.amount}, {item_id: answers.inventorySelected}])
-            connection.query("UPDATE products SET ? WHERE ?", [{ stock_quantity: stock_quantity - answers.amount }, { item_id: answers.inventorySelected }], (error, result) => {
+            let selectedInvAmount = results[answers.inventory-1].stock_quantity;
+            console.log(selectedInvAmount);
+            connection.query("UPDATE products SET ? WHERE ?",[
+                {
+                    stock_quantity: selectedInvAmount + parseFloat(answers.amount)
+                },
+                {
+                    item_id: answers.inventory
+                }
+            ],(error) => {
                 if (error) throw error;
-            })        
+                console.log(results[answers.inventory-1].product_name + " inventory was increased.");
+                console.log(("-").repeat(30));
+                start();
+            })
         })
     })
 }
 
-function validateAge(age)
-{
-   var reg = /^\d+$/;
-   return reg.test(age) || false;
+const addNewProduct = () => {
+    inquirer.prompt([
+        {
+            name: "name",
+            message: "What is the Product Name?"
+        }, {
+            name: "department",
+            message: "What is the Department Name?"
+        }, {
+            name: "price",
+            message: "What is the Price?",
+            type: "number"
+        }, {
+            name: "quantity",
+            message: "What is the Quantity?",
+            type: "number"
+        }
+    ]).then(answers => {
+        console.log(answers);
+        connection.query("INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES(?,?,?,?)",[answers.name, answers.department, answers.price, answers.quantity], (err, res)=>{
+            if (err) throw err;
+            console.log(answers.name + " Added");
+            console.log(("-").repeat(30));
+            start();
+        })
+    })
 }
+
+
+
+// function validateAge(age) {
+//    var reg = /^\d+$/;
+//    return reg.test(age) || false;
+// }
 
 // connection.query("UPDATE products SET ? WHERE ?", [{ stock_quantity: res[0].stock_quantity - purchaseQuantity }, { item_id: purchaseID }], (error, result) => {
 //     if (err) throw err;
